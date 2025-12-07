@@ -1,1 +1,1 @@
-# edge_native_smart_monitor
+# Edge-Native Smart Monitor
