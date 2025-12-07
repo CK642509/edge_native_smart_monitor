@@ -10,6 +10,13 @@ class RingBuffer:
     """Thread-safe buffer that retains frames for a rolling time window."""
 
     def __init__(self, retention_seconds: float = 10.0, max_frames: Optional[int] = None) -> None:
+        """
+        Initialize the ring buffer.
+
+        Args:
+            retention_seconds (float): Maximum age in seconds for frames to retain. Frames older than this are evicted.
+            max_frames (Optional[int]): Optional maximum number of frames to keep. If None, only time-based eviction applies.
+        """
         self.retention_seconds = max(0.0, retention_seconds)
         self.max_frames = max_frames if (max_frames is None or max_frames > 0) else None
         
