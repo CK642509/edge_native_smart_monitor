@@ -30,15 +30,23 @@ class VideoRecorder:
         Args:
             output_dir: Directory where video files will be saved
             fps: Frames per second for output video
-            codec: FourCC codec string (e.g., 'mp4v', 'XVID', 'MJPG')
+            codec: 4-character FourCC codec identifier used by OpenCV's VideoWriter_fourcc
+                   (e.g., 'mp4v' for MPEG-4, 'XVID' for Xvid, 'MJPG' for Motion JPEG)
             file_extension: File extension for output files (e.g., '.mp4', '.avi')
             max_files: Maximum number of video files to retain. Older files are deleted when exceeded.
+                      None means unlimited, 0 means delete all files immediately after creation.
         """
         self.output_dir = output_dir
         self.fps = fps
-        self.codec = codec
         self.file_extension = file_extension
         self.max_files = max_files
+        
+        # Validate codec is exactly 4 characters for OpenCV VideoWriter_fourcc
+        if len(codec) != 4:
+            raise ValueError(
+                f"Codec must be exactly 4 characters for FourCC, got: {codec!r} ({len(codec)} chars)"
+            )
+        self.codec = codec
         
         # Ensure output directory exists
         self.output_dir.mkdir(parents=True, exist_ok=True)
