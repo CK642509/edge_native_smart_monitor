@@ -47,5 +47,5 @@ class RingBuffer:
             return
 
         cutoff = now - self.retention_seconds
-        while self._frames and self._frames[0].get("timestamp", now) < cutoff:
+        while self._frames and self._frames[0].get("timestamp", 0) < cutoff:
             self._frames.popleft()
