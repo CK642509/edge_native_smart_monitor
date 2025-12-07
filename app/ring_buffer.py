@@ -12,6 +12,11 @@ class RingBuffer:
     def __init__(self, retention_seconds: float = 10.0, max_frames: Optional[int] = None) -> None:
         self.retention_seconds = max(0.0, retention_seconds)
         self.max_frames = max_frames if (max_frames is None or max_frames > 0) else None
+        
+        # Ensure at least one eviction mechanism is active
+        if self.retention_seconds <= 0 and self.max_frames is None:
+            raise ValueError("Either retention_seconds must be positive or max_frames must be set")
+        
         self._frames: Deque[dict[str, Any]] = deque()
         self._lock = Lock()
 
