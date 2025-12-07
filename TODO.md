@@ -1,8 +1,8 @@
 # Edge-Native Smart Monitor 開發清單
 
 ## 步驟一：可執行骨架
-- [ ] 定義專案設定（路徑、前後錄影秒數、功能開關）以及 `CameraStream`、`RingBuffer`、`Detector`、`VideoRecorder`、`MonitorSystem` 等占位類別。
-- [ ] 在 `main.py` 中串接上述占位類別，建立最簡單的事件迴圈並可正常啟動與結束，先不做實際工作。
+- [x] 定義專案設定（路徑、前後錄影秒數、功能開關）以及 `CameraStream`、`RingBuffer`、`Detector`、`VideoRecorder`、`MonitorSystem` 等占位類別。
+- [x] 在 `main.py` 中串接上述占位類別，建立最簡單的事件迴圈並可正常啟動與結束，先不做實際工作。
 
 ## 步驟二：攝影來源
 - [ ] 實作 `CameraStream` 支援 webcam/RTSP 讀取，若無硬體時可輸出產生的假影像。

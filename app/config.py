@@ -1,0 +1,24 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+
+@dataclass
+class AppConfig:
+    """Runtime configuration for the monitoring stack."""
+
+    recording_dir: Path = Path("recordings")
+    pre_event_seconds: float = 10.0
+    post_event_seconds: float = 10.0
+    enable_monitoring: bool = True
+    frame_interval_seconds: float = 1.0
+    camera_source: Any = 0
+
+    @classmethod
+    def load(cls) -> "AppConfig":
+        # Placeholder for real configuration loading logic.
+        config = cls()
+        config.recording_dir.mkdir(parents=True, exist_ok=True)
+        return config
