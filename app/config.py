@@ -15,6 +15,10 @@ class AppConfig:
     enable_monitoring: bool = True
     frame_interval_seconds: float = 1.0
     camera_source: Any = 0
+    video_fps: float = 30.0
+    video_codec: str = "mp4v"
+    video_extension: str = ".mp4"
+    max_recordings: int = 50
 
     @classmethod
     def load(cls) -> "AppConfig":

@@ -27,11 +27,31 @@ def main() -> None:
     max_frames = int(retention_seconds / frame_interval) + 1
     buffer = RingBuffer(retention_seconds=retention_seconds, max_frames=max_frames)
     detector = Detector()
-    recorder = VideoRecorder(config.recording_dir)
+    recorder = VideoRecorder(
+        config.recording_dir,
+        fps=config.video_fps,
+        codec=config.video_codec,
+        file_extension=config.video_extension,
+        max_files=config.max_recordings,
+    )
     monitor = MonitorSystem(config, camera, buffer, detector, recorder)
 
     monitor.start()
-    monitor.run(runtime_seconds=5.0)
+    
+    # Run for a few seconds to accumulate frames, then manually trigger recording
+    logging.info("Running monitor for 3 seconds to accumulate frames...")
+    monitor.run(runtime_seconds=3.0)
+    
+    # Manually trigger a recording to demonstrate functionality
+    logging.info("Manually triggering recording of buffered frames...")
+    frames = buffer.snapshot()
+    if frames:
+        output_path = recorder.record_event(frames)
+        if output_path:
+            logging.info("Recording saved successfully: %s", output_path)
+    
+    # Continue running for a bit more
+    monitor.run(runtime_seconds=2.0)
     monitor.stop()
 
 
