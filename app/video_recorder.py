@@ -9,6 +9,10 @@ import cv2
 import numpy as np
 
 
+# Constants
+MB_BYTES = 1024 * 1024
+
+
 class VideoRecorder:
     """Responsible for writing video clips to disk."""
 
@@ -43,6 +47,32 @@ class VideoRecorder:
             "VideoRecorder initialized (dir=%s, fps=%.1f, codec=%s, ext=%s, max_files=%s)",
             self.output_dir, self.fps, self.codec, self.file_extension, self.max_files
         )
+
+    def _validate_frame(
+        self, frame_data: Any, expected_height: int, expected_width: int
+    ) -> bool:
+        """
+        Validate that frame data has correct dimensions.
+
+        Args:
+            frame_data: Frame data to validate
+            expected_height: Expected frame height
+            expected_width: Expected frame width
+
+        Returns:
+            True if frame is valid, False otherwise
+        """
+        if frame_data is None or not isinstance(frame_data, np.ndarray):
+            return False
+        
+        if frame_data.shape[:2] != (expected_height, expected_width):
+            logging.warning(
+                "Skipping frame with mismatched dimensions: expected (%d, %d), got %s",
+                expected_height, expected_width, frame_data.shape[:2]
+            )
+            return False
+        
+        return True
 
     def record_event(self, frames: list[dict[str, Any]]) -> Optional[Path]:
         """
@@ -92,23 +122,17 @@ class VideoRecorder:
             frames_skipped = 0
             for frame in frames:
                 frame_data = frame.get("data")
-                if frame_data is not None and isinstance(frame_data, np.ndarray):
-                    # Validate frame dimensions match the VideoWriter configuration
-                    if frame_data.shape[:2] != (height, width):
-                        frames_skipped += 1
-                        logging.warning(
-                            "Skipping frame with mismatched dimensions: expected (%d, %d), got %s",
-                            height, width, frame_data.shape[:2]
-                        )
-                        continue
+                if self._validate_frame(frame_data, height, width):
                     writer.write(frame_data)
                     frames_written += 1
+                else:
+                    frames_skipped += 1
 
             writer.release()
             
             if frames_skipped > 0:
                 logging.warning(
-                    "Skipped %d frame(s) due to dimension mismatch during recording",
+                    "Skipped %d frame(s) due to invalid or mismatched dimensions during recording",
                     frames_skipped
                 )
 
@@ -116,7 +140,7 @@ class VideoRecorder:
                 "VideoRecorder saved %d frames to %s (%.2f MB)",
                 frames_written,
                 output_path,
-                output_path.stat().st_size / (1024 * 1024)
+                output_path.stat().st_size / MB_BYTES
             )
 
             # Apply retention policy
@@ -134,8 +158,10 @@ class VideoRecorder:
     def _apply_retention_policy(self) -> None:
         """
         Apply retention policy by deleting oldest video files if max_files is exceeded.
+        If max_files is None, no retention policy is applied (unlimited files).
+        If max_files is 0, all files are deleted immediately.
         """
-        if self.max_files is None or self.max_files <= 0:
+        if self.max_files is None:
             return
 
         # Get all video files in the output directory
