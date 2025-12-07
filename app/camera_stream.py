@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import logging
 import time
 from typing import Any, Iterator, Optional
@@ -140,3 +141,55 @@ class CameraStream:
         cv2.putText(frame, timestamp_text, (200, 320), font, 0.6, (200, 200, 200), 1, cv2.LINE_AA)
         
         return frame
+
+
+def preview_camera_stream(source: Any = 0, duration: Optional[float] = 10.0) -> None:
+    """Preview frames from the camera stream in an OpenCV window."""
+    camera = CameraStream(source)
+    camera.start()
+    window_name = "CameraStream Preview"
+    start_time = time.time()
+
+    try:
+        for frame in camera.frames():
+            image = frame["data"]
+            cv2.imshow(window_name, image)
+
+            key = cv2.waitKey(1) & 0xFF
+            if key in (27, ord("q"), ord("Q")):
+                break
+
+            if duration is not None and duration > 0:
+                if (time.time() - start_time) >= duration:
+                    break
+    finally:
+        camera.stop()
+        cv2.destroyWindow(window_name)
+
+
+def _parse_cli_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Preview frames produced by CameraStream.")
+    parser.add_argument(
+        "--source",
+        default="0",
+        help="Camera source (webcam index, RTSP URL, or file path)",
+    )
+    parser.add_argument(
+        "--duration",
+        type=float,
+        default=10.0,
+        help="Preview duration in seconds (<=0 keeps running until 'q')",
+    )
+    return parser.parse_args()
+
+
+def _coerce_source(raw: str) -> Any:
+    try:
+        return int(raw)
+    except ValueError:
+        return raw
+
+
+if __name__ == "__main__":
+    args = _parse_cli_args()
+    preview_camera_stream(_coerce_source(args.source), args.duration)
