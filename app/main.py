@@ -19,7 +19,13 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(m
 def main() -> None:
     config = AppConfig.load()
     camera = CameraStream(config.camera_source)
-    buffer = RingBuffer()
+    retention_seconds = max(
+        config.pre_event_seconds + config.post_event_seconds,
+        1.0,
+    )
+    frame_interval = max(config.frame_interval_seconds, 1e-3)
+    max_frames = int(retention_seconds / frame_interval) + 1
+    buffer = RingBuffer(retention_seconds=retention_seconds, max_frames=max_frames)
     detector = Detector()
     recorder = VideoRecorder(config.recording_dir)
     monitor = MonitorSystem(config, camera, buffer, detector, recorder)
