@@ -44,6 +44,12 @@ class RingBuffer:
             self._evict(timestamp)
 
     def snapshot(self) -> list[dict[str, Any]]:
+        """
+        Create a thread-safe snapshot of all frames currently in the buffer.
+
+        Returns:
+            A list copy of all frames in chronological order.
+        """
         with self._lock:
             return list(self._frames)
 
