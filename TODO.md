@@ -5,12 +5,12 @@
 - [x] 在 `main.py` 中串接上述占位類別，建立最簡單的事件迴圈並可正常啟動與結束，先不做實際工作。
 
 ## 步驟二：攝影來源
-- [ ] 實作 `CameraStream` 支援 webcam/RTSP 讀取，若無硬體時可輸出產生的假影像。
-- [ ] 提供 start/stop 與 frame iterator API，好讓其他元件能即時取得畫面且 `main.py` 依然可運行。
+- [x] 實作 `CameraStream` 支援 webcam/RTSP 讀取，若無硬體時可輸出產生的假影像。
+- [x] 提供 start/stop 與 frame iterator API，好讓其他元件能即時取得畫面且 `main.py` 依然可運行。
 
 ## 步驟三：環形緩衝區
-- [ ] 建立以 deque 為基礎、含鎖的 `RingBuffer`，持續保存最近 N 秒畫面。
-- [ ] 在主迴圈中將 `CameraStream` 產生的畫面寫入緩衝區，確保即使錄影尚未完成也能取得歷史畫面。
+- [x] 建立以 deque 為基礎、含鎖的 `RingBuffer`，持續保存最近 N 秒畫面。
+- [x] 在主迴圈中將 `CameraStream` 產生的畫面寫入緩衝區，確保即使錄影尚未完成也能取得歷史畫面。
 
 ## 步驟四：錄影模組
 - [ ] 完成 `VideoRecorder`，可將緩衝區畫面與即時畫面寫成磁碟片段（如 MP4/AVI），包含檔名、儲存路徑與保留策略。
