@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -90,13 +89,28 @@ class VideoRecorder:
 
             # Write all frames
             frames_written = 0
+            frames_skipped = 0
             for frame in frames:
                 frame_data = frame.get("data")
                 if frame_data is not None and isinstance(frame_data, np.ndarray):
+                    # Validate frame dimensions match the VideoWriter configuration
+                    if frame_data.shape[:2] != (height, width):
+                        frames_skipped += 1
+                        logging.warning(
+                            "Skipping frame with mismatched dimensions: expected (%d, %d), got %s",
+                            height, width, frame_data.shape[:2]
+                        )
+                        continue
                     writer.write(frame_data)
                     frames_written += 1
 
             writer.release()
+            
+            if frames_skipped > 0:
+                logging.warning(
+                    "Skipped %d frame(s) due to dimension mismatch during recording",
+                    frames_skipped
+                )
 
             logging.info(
                 "VideoRecorder saved %d frames to %s (%.2f MB)",
