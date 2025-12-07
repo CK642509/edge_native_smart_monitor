@@ -21,7 +21,6 @@ def main() -> None:
     camera = CameraStream(config.camera_source)
     retention_seconds = max(
         config.pre_event_seconds + config.post_event_seconds,
-        config.pre_event_seconds,
         1.0,
     )
     frame_interval = max(config.frame_interval_seconds, 1e-3)
