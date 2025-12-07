@@ -56,6 +56,18 @@ class VideoRecorder:
             self.output_dir, self.fps, self.codec, self.file_extension, self.max_files
         )
 
+    def _generate_filename(self) -> str:
+        """
+        Generate a unique filename with timestamp including milliseconds.
+
+        Returns:
+            Filename string in format: event_YYYYMMDD_HHMMSS_mmm.ext
+        """
+        now = datetime.now()
+        timestamp = now.strftime("%Y%m%d_%H%M%S")
+        milliseconds = now.microsecond // 1000
+        return f"event_{timestamp}_{milliseconds:03d}{self.file_extension}"
+
     def _validate_frame(
         self, frame_data: Any, expected_height: int, expected_width: int
     ) -> bool:
@@ -96,23 +108,20 @@ class VideoRecorder:
             logging.warning("VideoRecorder received empty frame list, skipping recording")
             return None
 
-        # Generate filename with timestamp (including milliseconds for uniqueness)
-        now = datetime.now()
-        timestamp = now.strftime("%Y%m%d_%H%M%S")
-        milliseconds = now.microsecond // 1000
-        filename = f"event_{timestamp}_{milliseconds:03d}{self.file_extension}"
+        # Generate unique filename
+        filename = self._generate_filename()
         output_path = self.output_dir / filename
 
         try:
             # Get frame dimensions from first frame
-            first_frame = frames[0]["data"]
-            if not isinstance(first_frame, np.ndarray):
-                logging.error("Frame data is not a numpy array")
+            first_frame_data = frames[0].get("data")
+            if first_frame_data is None or not isinstance(first_frame_data, np.ndarray):
+                logging.error("First frame data is missing or not a numpy array")
                 return None
 
-            height, width = first_frame.shape[:2]
+            height, width = first_frame_data.shape[:2]
             
-            # Create VideoWriter
+            # Create VideoWriter with FourCC codec conversion
             fourcc = cv2.VideoWriter_fourcc(*self.codec)
             writer = cv2.VideoWriter(
                 str(output_path),
