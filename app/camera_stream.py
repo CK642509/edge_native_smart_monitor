@@ -118,10 +118,10 @@ class CameraStream:
         Returns:
             Numpy array representing a 640x480 BGR image
         """
-        # Create a gradient background
+        # Create a background with animated color
         frame = np.zeros((480, 640, 3), dtype=np.uint8)
         
-        # Add a color gradient based on frame count
+        # Calculate animated color based on frame count
         phase = (self._frame_count % 360) * np.pi / 180
         color_r = int(127 + 127 * np.sin(phase))
         color_g = int(127 + 127 * np.sin(phase + 2 * np.pi / 3))
