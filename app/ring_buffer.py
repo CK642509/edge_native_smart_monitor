@@ -21,6 +21,18 @@ class RingBuffer:
         self._lock = Lock()
 
     def append(self, frame: dict[str, Any]) -> None:
+        """
+        Append a frame to the buffer and evict old frames if necessary.
+
+        Args:
+            frame: A dictionary representing a frame. If the "timestamp" key is missing,
+                the current time will be added automatically.
+
+        Notes:
+            - If "timestamp" is not provided in the frame, it will be set to the current time.
+            - After appending, frames outside the retention window or exceeding max_frames
+              will be evicted immediately.
+        """
         timestamp = frame.get("timestamp")
         if timestamp is None:
             timestamp = time()
