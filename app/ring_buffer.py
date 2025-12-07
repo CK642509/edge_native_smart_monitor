@@ -24,10 +24,11 @@ class RingBuffer:
         timestamp = frame.get("timestamp")
         if timestamp is None:
             timestamp = time()
-            frame = {**frame, "timestamp": timestamp}
+        # Always create a copy of the frame with the correct timestamp
+        frame_copy = {**frame, "timestamp": timestamp}
 
         with self._lock:
-            self._frames.append(frame)
+            self._frames.append(frame_copy)
             self._evict(timestamp)
 
     def snapshot(self) -> list[dict[str, Any]]:
