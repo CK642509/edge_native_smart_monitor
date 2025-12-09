@@ -44,28 +44,56 @@ def main() -> None:
     )
     monitor = MonitorSystem(config, camera, buffer, detector, recorder)
 
-    monitor.start()
+    # Demonstrate Step 6: Monitoring Coordination Layer
+    logging.info("=== Demonstrating MonitorSystem Capabilities (Step 6) ===")
     
-    # Run for a few seconds to accumulate frames, then manually trigger recording
+    # Start the system
+    monitor.start()
+    status = monitor.get_status()
     logging.info(
-        "Running monitor (capturing at ~%.1f FPS, detecting every %.1f seconds)...",
+        "System started - running=%s, monitoring=%s, buffer_size=%d",
+        status["running"], status["monitoring_enabled"], status["buffer_size"]
+    )
+    
+    # Run for a few seconds to accumulate frames
+    logging.info(
+        "Capturing frames (at ~%.1f FPS, detecting every %.1f seconds)...",
         1.0 / config.frame_interval_seconds,
         config.detection_interval_seconds
     )
     monitor.run(runtime_seconds=3.0)
     
-    # Manually trigger a recording to demonstrate functionality
-    logging.info("Manually triggering recording of buffered frames...")
-    frames = buffer.snapshot()
-    if frames:
-        logging.info("Buffer contains %d frames", len(frames))
-        output_path = recorder.record_event(frames)
-        if output_path:
-            logging.info("Recording saved successfully: %s", output_path)
+    # Check status after running
+    status = monitor.get_status()
+    logging.info("Buffer accumulated %d frames", status["buffer_size"])
     
-    # Continue running for a bit more
+    # Demonstrate manual recording with pre/post event seconds
+    logging.info("Manually triggering recording (pre=%.1fs, post=%.1fs)...",
+                 config.pre_event_seconds, config.post_event_seconds)
+    output_path = monitor.trigger_manual_recording()
+    if output_path:
+        logging.info("Recording saved: %s", output_path)
+    
+    # Demonstrate monitoring enable/disable toggle
+    logging.info("\n=== Testing monitoring enable/disable ===")
+    monitor.disable_monitoring()
+    logging.info("Monitoring disabled - camera still running, but no detection")
     monitor.run(runtime_seconds=2.0)
+    
+    monitor.enable_monitoring()
+    logging.info("Monitoring re-enabled - detection active again")
+    monitor.run(runtime_seconds=2.0)
+    
+    # Final status
+    status = monitor.get_status()
+    logging.info(
+        "\nFinal status: running=%s, monitoring=%s, recordings=%d",
+        status["running"], status["monitoring_enabled"], status["recording_count"]
+    )
+    
     monitor.stop()
+    logging.info("=== Demonstration complete ===")
+
 
 
 if __name__ == "__main__":
