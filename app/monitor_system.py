@@ -6,7 +6,7 @@ from typing import Optional
 
 from app.camera_stream import CameraStream
 from app.config import AppConfig
-from app.detector import Detector
+from app.detector import Detector, DetectionEvent
 from app.ring_buffer import RingBuffer
 from app.video_recorder import VideoRecorder
 
@@ -57,7 +57,27 @@ class MonitorSystem:
         current_time = time.time()
         if current_time - self._last_detection_time >= self.config.detection_interval_seconds:
             self._last_detection_time = current_time
-            if self.detector.should_record(frame):
+            
+            # Poll detector and create event structure
+            should_record = self.detector.should_record(frame)
+            event = DetectionEvent(
+                timestamp=current_time,
+                should_record=should_record,
+                frame_number=frame.get("frame_number"),
+                details=None
+            )
+            
+            # Output event structure for monitoring
+            logging.debug(
+                "Detection event: should_record=%s, frame_number=%s, timestamp=%.3f",
+                event.should_record,
+                event.frame_number,
+                event.timestamp
+            )
+            
+            # Trigger recording if needed
+            if event.should_record:
+                logging.info("Recording triggered by detection event at frame %s", event.frame_number)
                 self.recorder.record_event(self.buffer.snapshot())
 
     def run(self, runtime_seconds: Optional[float] = None) -> None:
