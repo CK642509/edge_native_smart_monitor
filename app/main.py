@@ -16,6 +16,10 @@ from app.video_recorder import VideoRecorder
 logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(message)s")
 
 
+# Constants
+MIN_FRAME_INTERVAL_SECONDS = 1e-3  # 1 millisecond minimum
+
+
 def main() -> None:
     config = AppConfig.load()
     camera = CameraStream(config.camera_source)
@@ -25,7 +29,7 @@ def main() -> None:
         config.pre_event_seconds + config.post_event_seconds,
         1.0,
     )
-    frame_interval = max(config.frame_interval_seconds, 1e-3)
+    frame_interval = max(config.frame_interval_seconds, MIN_FRAME_INTERVAL_SECONDS)
     # Calculate max_frames based on actual frame capture rate to store all frames
     max_frames = int(retention_seconds / frame_interval) + 1
     

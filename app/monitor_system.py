@@ -35,6 +35,7 @@ class MonitorSystem:
             return
         self.camera.start()
         self._running = True
+        self._last_detection_time = time.time()
         logging.info("MonitorSystem started")
 
     def stop(self) -> None:
