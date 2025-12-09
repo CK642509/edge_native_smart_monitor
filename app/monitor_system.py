@@ -63,8 +63,7 @@ class MonitorSystem:
             event = DetectionEvent(
                 timestamp=current_time,
                 should_record=should_record,
-                frame_number=frame.get("frame_number"),
-                details=None
+                frame_number=frame.get("frame_number")
             )
             
             # Output event structure for monitoring
