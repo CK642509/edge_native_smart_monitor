@@ -28,6 +28,7 @@ class MonitorSystem:
         self.detector = detector
         self.recorder = recorder
         self._running = False
+        self._last_detection_time = 0.0
 
     def start(self) -> None:
         if self._running:
@@ -46,10 +47,17 @@ class MonitorSystem:
     def tick(self) -> None:
         if not self._running:
             return
+        
+        # Always capture and buffer the frame
         frame = self.camera.read_frame()
         self.buffer.append(frame)
-        if self.detector.should_record(frame):
-            self.recorder.record_event(self.buffer.snapshot())
+        
+        # Only run detection at the configured interval
+        current_time = time.time()
+        if current_time - self._last_detection_time >= self.config.detection_interval_seconds:
+            self._last_detection_time = current_time
+            if self.detector.should_record(frame):
+                self.recorder.record_event(self.buffer.snapshot())
 
     def run(self, runtime_seconds: Optional[float] = None) -> None:
         start_time = time.time()

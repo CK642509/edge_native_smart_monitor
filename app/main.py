@@ -19,12 +19,16 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(m
 def main() -> None:
     config = AppConfig.load()
     camera = CameraStream(config.camera_source)
+    
+    # Calculate buffer size based on retention time and frame capture rate
     retention_seconds = max(
         config.pre_event_seconds + config.post_event_seconds,
         1.0,
     )
     frame_interval = max(config.frame_interval_seconds, 1e-3)
+    # Calculate max_frames based on actual frame capture rate to store all frames
     max_frames = int(retention_seconds / frame_interval) + 1
+    
     buffer = RingBuffer(retention_seconds=retention_seconds, max_frames=max_frames)
     detector = Detector()
     recorder = VideoRecorder(
@@ -39,13 +43,18 @@ def main() -> None:
     monitor.start()
     
     # Run for a few seconds to accumulate frames, then manually trigger recording
-    logging.info("Running monitor for 3 seconds to accumulate frames...")
+    logging.info(
+        "Running monitor (capturing at ~%.1f FPS, detecting every %.1f seconds)...",
+        1.0 / config.frame_interval_seconds,
+        config.detection_interval_seconds
+    )
     monitor.run(runtime_seconds=3.0)
     
     # Manually trigger a recording to demonstrate functionality
     logging.info("Manually triggering recording of buffered frames...")
     frames = buffer.snapshot()
     if frames:
+        logging.info("Buffer contains %d frames", len(frames))
         output_path = recorder.record_event(frames)
         if output_path:
             logging.info("Recording saved successfully: %s", output_path)
