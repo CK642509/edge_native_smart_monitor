@@ -58,7 +58,8 @@ class MonitorSystem:
             logging.debug("Monitoring is already enabled")
             return
         self._monitoring_enabled = True
-        self._last_detection_time = time.time()
+        # Set to current time minus interval to allow immediate detection on next tick
+        self._last_detection_time = time.time() - self.config.detection_interval_seconds
         logging.info("Monitoring enabled")
     
     def disable_monitoring(self) -> None:
@@ -167,7 +168,9 @@ class MonitorSystem:
                 # Validate that frames have valid timestamps
                 frames_to_record = [
                     frame for frame in all_frames
-                    if "timestamp" in frame and start_time <= frame["timestamp"] <= end_time
+                    if "timestamp" in frame 
+                    and isinstance(frame["timestamp"], (int, float))
+                    and start_time <= frame["timestamp"] <= end_time
                 ]
                 
                 if not frames_to_record:
