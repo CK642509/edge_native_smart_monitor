@@ -1,12 +1,15 @@
+import asyncio
 import logging
 import sys
-import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import AsyncIterator
 
 if __package__ is None or __package__ == "":
     sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import uvicorn
+from fastapi import FastAPI
 
 from app.api import create_app
 from app.camera_stream import CameraStream
@@ -24,16 +27,22 @@ logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s: %(m
 MIN_FRAME_INTERVAL_SECONDS = 1e-3  # 1 millisecond minimum
 
 
-def run_monitoring_loop(monitor: MonitorSystem) -> None:
+async def run_monitoring_loop(monitor: MonitorSystem) -> None:
     """
-    Run the monitoring loop in a separate thread.
+    Run the monitoring loop asynchronously.
     
     Args:
         monitor: MonitorSystem instance to run
     """
     try:
         logging.info("Starting monitoring loop...")
-        monitor.run()  # Run indefinitely until stopped
+        while monitor.is_running():
+            # Run tick in executor to avoid blocking event loop
+            await asyncio.get_event_loop().run_in_executor(None, monitor.tick)
+            await asyncio.sleep(monitor.config.frame_interval_seconds)
+    except asyncio.CancelledError:
+        logging.info("Monitoring loop cancelled")
+        raise
     except Exception as e:
         logging.error("Monitoring loop error: %s", e)
 
@@ -63,43 +72,52 @@ def main() -> None:
     )
     monitor = MonitorSystem(config, camera, buffer, detector, recorder)
 
-    # Start the monitoring system
-    monitor.start()
-    logging.info("MonitorSystem started")
-    
-    # Start monitoring loop in a separate thread
-    monitor_thread = threading.Thread(
-        target=run_monitoring_loop,
-        args=(monitor,),
-        daemon=True,
-        name="MonitoringLoop"
-    )
-    monitor_thread.start()
-    logging.info("Monitoring loop thread started")
-
-    # Create and run FastAPI application
-    app = create_app(monitor)
-    
-    logging.info("=== Edge-Native Smart Monitor API (Step 7) ===")
-    logging.info("Starting FastAPI server...")
-    logging.info("API documentation: http://127.0.0.1:8000/docs")
-    logging.info("MJPEG stream: http://127.0.0.1:8000/stream/mjpeg")
-    logging.info("Press Ctrl+C to stop")
-    
-    try:
-        # Run uvicorn server (blocking call)
-        uvicorn.run(
-            app,
-            host="0.0.0.0",
-            port=8000,
-            log_level="info"
-        )
-    except KeyboardInterrupt:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        """
+        FastAPI lifespan context manager for startup and shutdown.
+        
+        Args:
+            app: FastAPI application instance
+        """
+        # Startup
+        monitor.start()
+        logging.info("MonitorSystem started")
+        
+        # Start monitoring loop as background task
+        monitoring_task = asyncio.create_task(run_monitoring_loop(monitor))
+        logging.info("Monitoring loop task started")
+        
+        logging.info("=== Edge-Native Smart Monitor API (Step 7) ===")
+        logging.info("API documentation: http://127.0.0.1:8000/docs")
+        logging.info("MJPEG stream: http://127.0.0.1:8000/stream/mjpeg")
+        
+        yield
+        
+        # Shutdown
         logging.info("Shutting down...")
-    finally:
-        # Stop monitoring system
+        monitoring_task.cancel()
+        try:
+            await monitoring_task
+        except asyncio.CancelledError:
+            pass
         monitor.stop()
         logging.info("MonitorSystem stopped")
+
+    # Create FastAPI application with lifespan
+    app = create_app(monitor)
+    app.router.lifespan_context = lifespan
+    
+    logging.info("Starting FastAPI server...")
+    logging.info("Press Ctrl+C to stop")
+    
+    # Run uvicorn server (blocking call)
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        log_level="info"
+    )
 
 
 if __name__ == "__main__":
