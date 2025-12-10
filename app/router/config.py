@@ -54,7 +54,7 @@ def create_config_router(monitor: MonitorSystem) -> APIRouter:
             enable_monitoring=monitor.is_monitoring_enabled()
         )
 
-    @router.put("", tags=["Configuration"])
+    @router.put("")
     async def update_config(config_update: ConfigUpdate) -> dict[str, Any]:
         """
         Update system configuration.

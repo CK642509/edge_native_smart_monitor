@@ -36,9 +36,10 @@ async def run_monitoring_loop(monitor: MonitorSystem) -> None:
     """
     try:
         logging.info("Starting monitoring loop...")
+        loop = asyncio.get_running_loop()
         while monitor.is_running():
             # Run tick in executor to avoid blocking event loop
-            await asyncio.get_event_loop().run_in_executor(None, monitor.tick)
+            await loop.run_in_executor(None, monitor.tick)
             await asyncio.sleep(monitor.config.frame_interval_seconds)
     except asyncio.CancelledError:
         logging.info("Monitoring loop cancelled")
@@ -105,8 +106,7 @@ def main() -> None:
         logging.info("MonitorSystem stopped")
 
     # Create FastAPI application with lifespan
-    app = create_app(monitor)
-    app.router.lifespan_context = lifespan
+    app = create_app(monitor, lifespan=lifespan)
     
     logging.info("Starting FastAPI server...")
     logging.info("Press Ctrl+C to stop")

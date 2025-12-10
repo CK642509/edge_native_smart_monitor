@@ -10,12 +10,13 @@ from app.router.status import create_status_router
 from app.router.stream import create_stream_router
 
 
-def create_app(monitor: MonitorSystem) -> FastAPI:
+def create_app(monitor: MonitorSystem, lifespan=None) -> FastAPI:
     """
     Create and configure FastAPI application.
     
     Args:
         monitor: MonitorSystem instance to control
+        lifespan: Optional lifespan context manager for startup/shutdown
         
     Returns:
         Configured FastAPI application
@@ -23,7 +24,8 @@ def create_app(monitor: MonitorSystem) -> FastAPI:
     app = FastAPI(
         title="Edge-Native Smart Monitor API",
         description="REST API for controlling the smart monitor system",
-        version="1.0.0"
+        version="1.0.0",
+        lifespan=lifespan
     )
 
     @app.get("/", tags=["General"])
