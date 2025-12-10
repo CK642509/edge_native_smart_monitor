@@ -165,15 +165,18 @@ class TestMonitorSystem:
         """Test that buffer size is limited by configuration."""
         monitor_system.start()
         
-        # Run many ticks
-        for _ in range(100):
+        # Run many ticks (more than buffer capacity)
+        for _ in range(150):
             monitor_system.tick()
             time.sleep(0.01)
         
         # Buffer should not grow indefinitely
         buffer_size = len(monitor_system.buffer)
-        # Based on test config: retention ~4s, interval 0.1s = ~40 frames max
-        assert buffer_size <= 100, "Buffer should be limited by retention policy"
+        # Buffer has max_frames=100 in the fixture
+        # Buffer should be at or near max capacity but not exceed it
+        assert buffer_size <= 100, f"Buffer should be limited by max_frames (got {buffer_size}, expected <=100)"
+        # Verify it's actually near capacity (not much smaller)
+        assert buffer_size >= 90, f"Buffer should be near capacity (got {buffer_size}, expected >=90)"
         
         monitor_system.stop()
 

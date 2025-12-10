@@ -35,7 +35,7 @@ class TestVideoRecorder:
             VideoRecorder(
                 output_dir=temp_recording_dir,
                 fps=10.0,
-                codec="invalid",  # Too long
+                codec="invalid",  # 7 characters, exceeds required 4-character limit
                 file_extension=".mp4",
             )
 

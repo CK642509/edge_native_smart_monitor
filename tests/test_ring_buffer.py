@@ -91,30 +91,30 @@ class TestRingBuffer:
     def test_thread_safety(self) -> None:
         """Test that buffer is thread-safe for concurrent access."""
         buffer = RingBuffer(retention_seconds=10.0, max_frames=1000)
-        errors = []
+        errors: list[Exception] = []
         
-        def writer_thread(start_num: int) -> None:
+        def writer_thread(start_num: int, buf: RingBuffer, error_list: list) -> None:
             try:
                 for i in range(50):
                     frame = {"frame_number": start_num + i}
-                    buffer.append(frame)
+                    buf.append(frame)
             except Exception as e:
-                errors.append(e)
+                error_list.append(e)
         
-        def reader_thread() -> None:
+        def reader_thread(buf: RingBuffer, error_list: list) -> None:
             try:
                 for _ in range(50):
-                    buffer.snapshot()
+                    buf.snapshot()
                     time.sleep(0.001)
             except Exception as e:
-                errors.append(e)
+                error_list.append(e)
         
         # Start multiple writer and reader threads
         threads = [
-            Thread(target=writer_thread, args=(0,)),
-            Thread(target=writer_thread, args=(1000,)),
-            Thread(target=reader_thread),
-            Thread(target=reader_thread),
+            Thread(target=writer_thread, args=(0, buffer, errors)),
+            Thread(target=writer_thread, args=(1000, buffer, errors)),
+            Thread(target=reader_thread, args=(buffer, errors)),
+            Thread(target=reader_thread, args=(buffer, errors)),
         ]
         
         for thread in threads:
