@@ -1,5 +1,23 @@
 # Edge-Native Smart Monitor
 
+## 測試
+
+完整的測試套件已建立，涵蓋所有核心元件與 API 端點。
+
+```bash
+# 執行所有測試
+pytest tests/
+
+# 執行特定測試類別
+pytest tests/test_camera_stream.py    # 攝影機串流測試
+pytest tests/test_ring_buffer.py      # 環形緩衝區測試
+pytest tests/test_video_recorder.py   # 錄影模組測試
+pytest tests/test_monitor_system.py   # 監控系統整合測試
+pytest tests/test_api.py              # API 端點測試
+```
+
+測試使用合成影像，不需要實體攝影機硬體即可執行。詳見 [tests/README.md](tests/README.md)。
+
 ## 啟動監控主程式
 
 ### 基本模式（命令行）
