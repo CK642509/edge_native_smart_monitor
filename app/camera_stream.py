@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import time
 from typing import Any, Iterator, Optional
 
@@ -12,22 +13,32 @@ import numpy as np
 class CameraStream:
     """Camera stream that supports webcam/RTSP or generates synthetic frames."""
 
-    def __init__(self, source: Any = 0) -> None:
+    def __init__(self, source: Any = 0, force_synthetic: Optional[bool] = None) -> None:
         """
         Initialize camera stream.
         
         Args:
             source: Camera source (0 for default webcam, RTSP URL string, or video file path)
+            force_synthetic: Optionally override hardware usage (True to always use synthetic frames,
+                False to always attempt hardware, None to auto-detect)
         """
         self.source = source
         self._running = False
         self._cap: Optional[cv2.VideoCapture] = None
         self._use_synthetic = False
         self._frame_count = 0
+        self._force_synthetic = force_synthetic
 
     def start(self) -> None:
         """Start the camera stream."""
         if self._running:
+            return
+
+        if self._should_use_synthetic():
+            logging.info("CameraStream forced to synthetic mode")
+            self._use_synthetic = True
+            self._running = True
+            self._frame_count = 0
             return
             
         # Try to open the camera source
@@ -141,6 +152,19 @@ class CameraStream:
         cv2.putText(frame, timestamp_text, (200, 320), font, 0.6, (200, 200, 200), 1, cv2.LINE_AA)
         
         return frame
+
+    def _should_use_synthetic(self) -> bool:
+        """Determine whether synthetic frames should be used without touching hardware."""
+        if self._force_synthetic is not None:
+            return self._force_synthetic
+
+        if os.environ.get("EDGE_NATIVE_SMART_MONITOR_FORCE_SYNTHETIC") == "1":
+            return True
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
+            return True
+
+        return False
 
 
 def preview_camera_stream(source: Any = 0, duration: Optional[float] = 10.0) -> None:
