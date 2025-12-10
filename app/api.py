@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any, Iterator, Optional
 
 import cv2
 import numpy as np
@@ -191,7 +191,7 @@ def create_app(monitor: MonitorSystem) -> FastAPI:
         if not monitor.is_running():
             raise HTTPException(status_code=503, detail="Camera is not running")
 
-        def generate_mjpeg() -> bytes:
+        def generate_mjpeg() -> Iterator[bytes]:
             """Generate MJPEG stream from camera frames."""
             try:
                 while monitor.is_running():
@@ -209,9 +209,7 @@ def create_app(monitor: MonitorSystem) -> FastAPI:
                             continue
                         
                         # Yield frame in MJPEG format
-                        yield (b'--frame\r\n'
-                               b'Content-Type: image/jpeg\r\n\r\n' + 
-                               buffer.tobytes() + b'\r\n')
+                        yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n'
                         
                     except Exception as e:
                         logging.error("Error generating MJPEG frame: %s", e)
