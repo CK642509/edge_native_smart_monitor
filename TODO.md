@@ -31,6 +31,7 @@
 ## 步驟八：測試與驗證
 - [x] 新增測試基礎：為 `CameraStream` 假影像、`RingBuffer`、`VideoRecorder` 建立 fixture 與單元測試，確保在沒有硬體時也能完整驗證。
 - [x] API/整合測試：模擬監控啟停、錄影觸發、串流端點與設定調整流程，確保 FastAPI 層與核心迴圈協同運作。
+- [x] 自動化測試：新增 GitHub Actions workflow，在 PR merge 至 `main` 前與 `main` push 時自動執行 `pytest`。
 
 ## 步驟九：智慧偵測與觸發
 - [ ] 簡易偵測器：實作 `PresenceDetector`（如背景減除/YOLO 人型偵測），檢測畫面是否有人，並將結果以事件形式送回 `MonitorSystem`。
