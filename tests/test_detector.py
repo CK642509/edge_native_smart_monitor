@@ -236,6 +236,29 @@ class TestPresenceDetector:
         result = detector.should_record(frame)
         assert result is False
 
+    def test_presence_detector_is_person_present(self) -> None:
+        """Test is_person_present method."""
+        detector = PresenceDetector(
+            frames_threshold=2,
+            cooldown_seconds=0.0,
+            motion_threshold=self.TEST_MOTION_THRESHOLD
+        )
+        
+        # Before initialization, should return False
+        assert detector.is_person_present() is False
+        
+        # Skip warmup and initialize
+        detector._warmup_frames = detector._warmup_threshold
+        detector._initialized = True
+        detector._person_present = True
+        
+        # Now should return True
+        assert detector.is_person_present() is True
+        
+        # When person leaves, should return False
+        detector._person_present = False
+        assert detector.is_person_present() is False
+
 
 class TestDetectionEvent:
     """Test cases for DetectionEvent dataclass."""

@@ -81,6 +81,15 @@ class PresenceDetector(Detector):
         self._warmup_frames = 0
         self._warmup_threshold = self.DEFAULT_WARMUP_FRAMES
     
+    def is_person_present(self) -> bool:
+        """
+        Check if a person is currently present in the frame.
+        
+        Returns:
+            bool: True if person is present, False otherwise
+        """
+        return self._person_present and self._initialized
+    
     def should_record(self, frame: dict[str, Any]) -> bool:
         """
         Check if recording should be triggered based on person leaving the frame.
