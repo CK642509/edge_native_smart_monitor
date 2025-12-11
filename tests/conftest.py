@@ -26,15 +26,18 @@ def temp_recording_dir() -> Iterator[Path]:
 @pytest.fixture
 def test_config(temp_recording_dir: Path) -> AppConfig:
     """Create a test configuration with temporary recording directory."""
-    config = AppConfig()
-    config.recording_dir = temp_recording_dir
-    config.pre_event_seconds = 2.0
-    config.post_event_seconds = 2.0
-    config.frame_interval_seconds = 0.1  # Faster for tests
-    config.detection_interval_seconds = 0.5  # Faster for tests
-    config.camera_source = 0  # Will use synthetic frames
-    config.video_fps = 10.0
-    config.max_recordings = 5
+    config = AppConfig(
+        recording_dir=temp_recording_dir,
+        pre_event_seconds=2.0,
+        post_event_seconds=2.0,
+        frame_interval_seconds=0.1,  # Faster for tests
+        detection_interval_seconds=0.5,  # Faster for tests
+        camera_source=0,  # Will use synthetic frames
+        video_fps=10.0,
+        max_recordings=5,
+        frame_width=640,
+        frame_height=480
+    )
     return config
 
 

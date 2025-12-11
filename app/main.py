@@ -22,7 +22,11 @@ MIN_FRAME_INTERVAL_SECONDS = 1e-3  # 1 millisecond minimum
 
 def main() -> None:
     config = AppConfig.load()
-    camera = CameraStream(config.camera_source)
+    camera = CameraStream(
+        config.camera_source,
+        frame_width=config.frame_width,
+        frame_height=config.frame_height
+    )
     
     # Calculate buffer size based on retention time and frame capture rate
     retention_seconds = max(
