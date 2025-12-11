@@ -47,6 +47,9 @@ class TestDetector:
 
 class TestPresenceDetector:
     """Test cases for PresenceDetector."""
+    
+    # Test configuration constants
+    TEST_MOTION_THRESHOLD = 1000  # Higher than default (500) for more reliable tests
 
     def test_presence_detector_initialization(self) -> None:
         """Test presence detector can be initialized with default parameters."""
@@ -83,11 +86,11 @@ class TestPresenceDetector:
 
     def test_presence_detector_trigger_after_threshold(self) -> None:
         """Test that detector triggers after threshold frames without person."""
-        # Use a simpler approach - verify the state machine works
+        # Use higher threshold than default for more reliable testing
         detector = PresenceDetector(
             frames_threshold=2, 
             cooldown_seconds=0.0,
-            motion_threshold=1000  # Lower threshold for easier testing
+            motion_threshold=self.TEST_MOTION_THRESHOLD
         )
         
         # Skip warmup by manually setting the flag
@@ -126,7 +129,7 @@ class TestPresenceDetector:
         detector = PresenceDetector(
             frames_threshold=1, 
             cooldown_seconds=1.0,
-            motion_threshold=1000
+            motion_threshold=self.TEST_MOTION_THRESHOLD
         )
         
         # Skip warmup
@@ -165,7 +168,7 @@ class TestPresenceDetector:
         detector = PresenceDetector(
             frames_threshold=2, 
             cooldown_seconds=0.0,
-            motion_threshold=1000
+            motion_threshold=self.TEST_MOTION_THRESHOLD
         )
         
         # Skip warmup
