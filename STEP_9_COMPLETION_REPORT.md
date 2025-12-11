@@ -196,3 +196,47 @@ TODO Step 9 is **COMPLETE** with:
 - ✅ Comprehensive documentation
 
 The system is ready for production use and further enhancement in Step 10.
+
+## Status Overlay Feature
+
+### Overview
+The MJPEG video stream now displays real-time status information in the upper left corner of each frame.
+
+### Status Indicators
+
+**Person Presence:**
+- **"Person: YES"** (Green) - Person detected in frame
+- **"Person: NO"** (Red) - No person detected
+
+**Recording Status:**
+- **"Recording: YES"** (Red) - Currently recording an event
+- **"Recording: NO"** (Gray) - Not recording
+
+### Implementation Details
+
+**PresenceDetector Enhancement:**
+- Added `is_person_present()` method to query current detection state
+- Returns `True` only when detector is initialized and person is present
+
+**Stream Overlay Function:**
+- `draw_status_overlay()` in `app/router/stream.py`
+- Creates a copy of the frame to avoid modifying original
+- Uses OpenCV `cv2.putText()` with black outline for visibility
+- Applied to MJPEG stream before JPEG encoding
+
+### Usage
+
+**Via Web Browser:**
+Navigate to `http://127.0.0.1:8000/stream/mjpeg` to view the live stream with status overlay.
+
+**Via API:**
+The overlay is automatically applied to the `/stream/mjpeg` endpoint when using the FastAPI server:
+```bash
+python -m app.main_api
+```
+
+### Testing
+- 4 new tests in `tests/test_stream_overlay.py`
+- Verifies overlay rendering with different states
+- Confirms original frame is not modified
+- Total test count: 89 tests (all passing)
