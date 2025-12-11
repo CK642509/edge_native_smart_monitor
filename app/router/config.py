@@ -11,8 +11,8 @@ from app.monitor_system import MonitorSystem
 
 class ConfigUpdate(BaseModel):
     """Model for configuration updates."""
-    pre_event_seconds: Optional[float] = Field(None, ge=0, description="Seconds to record before event")
-    post_event_seconds: Optional[float] = Field(None, ge=0, description="Seconds to record after event")
+    pre_event_seconds: Optional[float] = Field(None, ge=0, le=60, description="Seconds to record before event (0-60)")
+    post_event_seconds: Optional[float] = Field(None, ge=0, le=60, description="Seconds to record after event (0-60)")
     detection_interval_seconds: Optional[float] = Field(None, gt=0, description="Detection interval in seconds")
 
 

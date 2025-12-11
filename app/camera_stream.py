@@ -13,7 +13,13 @@ import numpy as np
 class CameraStream:
     """Camera stream that supports webcam/RTSP or generates synthetic frames."""
 
-    def __init__(self, source: Any = 0, force_synthetic: Optional[bool] = None) -> None:
+    def __init__(
+        self, 
+        source: Any = 0, 
+        force_synthetic: Optional[bool] = None,
+        frame_width: int = 640,
+        frame_height: int = 480
+    ) -> None:
         """
         Initialize camera stream.
         
@@ -21,6 +27,8 @@ class CameraStream:
             source: Camera source (0 for default webcam, RTSP URL string, or video file path)
             force_synthetic: Optionally override hardware usage (True to always use synthetic frames,
                 False to always attempt hardware, None to auto-detect)
+            frame_width: Target frame width in pixels
+            frame_height: Target frame height in pixels
         """
         self.source = source
         self._running = False
@@ -28,6 +36,8 @@ class CameraStream:
         self._use_synthetic = False
         self._frame_count = 0
         self._force_synthetic = force_synthetic
+        self.frame_width = frame_width
+        self.frame_height = frame_height
 
     def start(self) -> None:
         """Start the camera stream."""
@@ -80,6 +90,7 @@ class CameraStream:
         
         Returns:
             Dictionary containing 'timestamp', 'data' (numpy array), and 'frame_number'
+            Frame data is resized to the configured frame_width x frame_height
             
         Raises:
             RuntimeError: If stream is not running
@@ -103,6 +114,10 @@ class CameraStream:
                     self._cap.release()
                     self._cap = None
                 frame = self._generate_synthetic_frame()
+            else:
+                # Resize frame from camera to match configured dimensions
+                if frame.shape[:2] != (self.frame_height, self.frame_width):
+                    frame = cv2.resize(frame, (self.frame_width, self.frame_height))
         
         return {
             "timestamp": timestamp,
@@ -128,10 +143,10 @@ class CameraStream:
         Generate a synthetic frame for testing when no camera is available.
         
         Returns:
-            Numpy array representing a 640x480 BGR image
+            Numpy array representing a BGR image with configured dimensions
         """
-        # Create a background with animated color
-        frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        # Create a background with animated color using configured dimensions
+        frame = np.zeros((self.frame_height, self.frame_width, 3), dtype=np.uint8)
         
         # Calculate animated color based on frame count
         phase = (self._frame_count % 360) * np.pi / 180
@@ -141,15 +156,23 @@ class CameraStream:
         
         frame[:, :] = [color_b, color_g, color_r]
         
-        # Add text overlay
+        # Add text overlay (scale based on frame height)
         text = f"Synthetic Frame #{self._frame_count}"
         font = cv2.FONT_HERSHEY_SIMPLEX
-        cv2.putText(frame, text, (50, 240), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(frame, "No Camera Available", (150, 280), font, 0.7, (255, 255, 255), 1, cv2.LINE_AA)
+        font_scale = self.frame_height / 480.0  # Scale relative to default 480p
+        text_thickness = max(1, int(2 * font_scale))
+        
+        # Center text positions (scaled)
+        text_y_center = self.frame_height // 2
+        cv2.putText(frame, text, (int(50 * font_scale), text_y_center - int(40 * font_scale)), 
+                    font, font_scale, (255, 255, 255), text_thickness, cv2.LINE_AA)
+        cv2.putText(frame, "No Camera Available", (int(150 * font_scale), text_y_center), 
+                    font, 0.7 * font_scale, (255, 255, 255), max(1, text_thickness - 1), cv2.LINE_AA)
         
         # Add timestamp
         timestamp_text = time.strftime("%Y-%m-%d %H:%M:%S")
-        cv2.putText(frame, timestamp_text, (200, 320), font, 0.6, (200, 200, 200), 1, cv2.LINE_AA)
+        cv2.putText(frame, timestamp_text, (int(200 * font_scale), text_y_center + int(40 * font_scale)), 
+                    font, 0.6 * font_scale, (200, 200, 200), max(1, text_thickness - 1), cv2.LINE_AA)
         
         return frame
 

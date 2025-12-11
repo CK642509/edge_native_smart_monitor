@@ -52,7 +52,11 @@ def main() -> None:
     """Main entry point for FastAPI-based monitoring system."""
     # Load configuration and initialize components
     config = AppConfig.load()
-    camera = CameraStream(config.camera_source)
+    camera = CameraStream(
+        config.camera_source,
+        frame_width=config.frame_width,
+        frame_height=config.frame_height
+    )
     
     # Calculate buffer size based on retention time and frame capture rate
     retention_seconds = max(

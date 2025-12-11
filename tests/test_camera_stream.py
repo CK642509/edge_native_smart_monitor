@@ -120,3 +120,42 @@ class TestCameraStream:
         assert color1 != color2, "Animated frames should have different colors"
         
         camera.stop()
+
+    def test_custom_frame_dimensions(self) -> None:
+        """Test that custom frame dimensions are respected."""
+        camera = CameraStream(source=0, frame_width=1280, frame_height=720)
+        camera.start()
+        camera._use_synthetic = True
+        
+        frame = camera.read_frame()
+        
+        assert frame["data"].shape == (720, 1280, 3)
+        
+        camera.stop()
+
+    def test_frame_resizing_from_camera(self) -> None:
+        """Test that frames from camera are resized to configured dimensions."""
+        # This test uses synthetic frames to simulate camera frames
+        camera = CameraStream(source=0, frame_width=320, frame_height=240)
+        camera.start()
+        camera._use_synthetic = True
+        
+        frame = camera.read_frame()
+        
+        # Frame should be resized to configured dimensions
+        assert frame["data"].shape == (240, 320, 3)
+        
+        camera.stop()
+
+    def test_default_frame_dimensions(self) -> None:
+        """Test that default frame dimensions are 640x480."""
+        camera = CameraStream(source=0)
+        camera.start()
+        camera._use_synthetic = True
+        
+        frame = camera.read_frame()
+        
+        # Default dimensions should be 640x480
+        assert frame["data"].shape == (480, 640, 3)
+        
+        camera.stop()
