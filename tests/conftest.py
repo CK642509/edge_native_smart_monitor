@@ -10,7 +10,7 @@ import pytest
 
 from app.camera_stream import CameraStream
 from app.config import AppConfig
-from app.detector import Detector
+from app.detector import Detector, PresenceDetector
 from app.monitor_system import MonitorSystem
 from app.ring_buffer import RingBuffer
 from app.video_recorder import VideoRecorder
@@ -74,6 +74,16 @@ def video_recorder(temp_recording_dir: Path) -> VideoRecorder:
 def detector() -> Detector:
     """Create a detector for testing."""
     return Detector()
+
+
+@pytest.fixture
+def presence_detector() -> PresenceDetector:
+    """Create a presence detector for testing."""
+    return PresenceDetector(
+        frames_threshold=3,
+        cooldown_seconds=1.0,
+        motion_threshold=500
+    )
 
 
 @pytest.fixture

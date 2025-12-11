@@ -7,7 +7,7 @@ if __package__ is None or __package__ == "":
 
 from app.camera_stream import CameraStream
 from app.config import AppConfig
-from app.detector import Detector
+from app.detector import PresenceDetector
 from app.monitor_system import MonitorSystem
 from app.ring_buffer import RingBuffer
 from app.video_recorder import VideoRecorder
@@ -38,7 +38,10 @@ def main() -> None:
     max_frames = int(retention_seconds / frame_interval) + 1
     
     buffer = RingBuffer(retention_seconds=retention_seconds, max_frames=max_frames)
-    detector = Detector()
+    detector = PresenceDetector(
+        frames_threshold=config.presence_frames_threshold,
+        cooldown_seconds=config.presence_cooldown_seconds
+    )
     recorder = VideoRecorder(
         config.recording_dir,
         fps=config.video_fps,

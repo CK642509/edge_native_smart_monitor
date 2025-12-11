@@ -24,6 +24,8 @@ class AppConfig(BaseModel):
     max_recordings: int = Field(default=50, ge=0, description="Maximum number of recordings to retain")
     frame_width: int = Field(default=640, gt=0, description="Frame width in pixels")
     frame_height: int = Field(default=480, gt=0, description="Frame height in pixels")
+    presence_frames_threshold: int = Field(default=3, ge=1, description="Consecutive frames without person to trigger recording")
+    presence_cooldown_seconds: float = Field(default=30.0, ge=0, description="Cooldown period after recording before next detection")
 
     @field_validator('video_extension')
     @classmethod

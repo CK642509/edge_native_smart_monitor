@@ -2,3 +2,5 @@ venv
 .venv
 __pycache__
 recordings/
+demo_recordings/
+*.mp4
