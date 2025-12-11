@@ -43,6 +43,11 @@ class PresenceDetector(Detector):
     it triggers a recording event.
     """
     
+    # Default configuration constants
+    DEFAULT_BG_HISTORY = 100  # Number of frames for background model
+    DEFAULT_BG_VAR_THRESHOLD = 25  # Variance threshold for background/foreground separation
+    DEFAULT_WARMUP_FRAMES = 10  # Number of frames needed to initialize background model
+    
     def __init__(
         self,
         frames_threshold: int = 3,
@@ -63,8 +68,8 @@ class PresenceDetector(Detector):
         
         # Background subtractor for motion detection
         self.bg_subtractor = cv2.createBackgroundSubtractorMOG2(
-            history=100,  # Shorter history for faster adaptation
-            varThreshold=25,  # More sensitive to changes
+            history=self.DEFAULT_BG_HISTORY,
+            varThreshold=self.DEFAULT_BG_VAR_THRESHOLD,
             detectShadows=False
         )
         
@@ -74,7 +79,7 @@ class PresenceDetector(Detector):
         self._last_recording_time = 0.0
         self._initialized = False
         self._warmup_frames = 0
-        self._warmup_threshold = 10  # Number of frames to warm up
+        self._warmup_threshold = self.DEFAULT_WARMUP_FRAMES
     
     def should_record(self, frame: dict[str, Any]) -> bool:
         """
