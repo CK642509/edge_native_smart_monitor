@@ -228,3 +228,44 @@ class TestMonitorSystem:
         assert updated_status["recording_count"] == initial_count + 1
         
         monitor_system.stop()
+
+
+class TestPresenceDetectorIntegration:
+    """Integration tests for PresenceDetector with MonitorSystem."""
+
+    def test_presence_detector_integration(
+        self,
+        test_config,
+        synthetic_camera,
+        ring_buffer,
+        video_recorder,
+        presence_detector
+    ) -> None:
+        """Test that PresenceDetector integrates correctly with MonitorSystem."""
+        from app.monitor_system import MonitorSystem
+        
+        # Create monitor system with presence detector
+        monitor = MonitorSystem(
+            config=test_config,
+            camera=synthetic_camera,
+            buffer=ring_buffer,
+            detector=presence_detector,
+            recorder=video_recorder,
+        )
+        
+        try:
+            monitor.start()
+            assert monitor.is_running()
+            
+            # Run for a few ticks to accumulate frames
+            for _ in range(30):
+                monitor.tick()
+                time.sleep(0.01)
+            
+            # Verify system is working
+            status = monitor.get_status()
+            assert status["buffer_size"] > 0
+            
+        finally:
+            if monitor.is_running():
+                monitor.stop()
